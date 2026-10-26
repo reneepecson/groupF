@@ -22,7 +22,7 @@ public class HeuristicTestRunner {
     }
 
     public static void main(String[] args) {
-        int nGames = 9;        // start with 9, then 99; multiples of 3 keep seating balanced
+        int nGames = 99;        // start with 9, then 99; multiples of 3 keep seating balanced
         int budgetMs = 100;
         String[] names = {"BasicMCTS+heuristic", "BasicMCTS plain", "MCTSPlayer"};
         double[] wins = new double[3], scoreSum = new double[3], ordinalSum = new double[3];
