@@ -1,0 +1,36 @@
+==== current weights (reference) (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.646 [0.548, 0.734], mean score 45.71, mean ordinal 1.45
+plain A: win rate 0.187 [0.122, 0.275], mean score 39.37, mean ordinal 2.22
+plain B: win rate 0.167 [0.106, 0.252], mean score 39.07, mean ordinal 2.28
+==== pudding 0.15 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.581 [0.482, 0.673], mean score 45.96, mean ordinal 1.54
+plain A: win rate 0.232 [0.160, 0.325], mean score 39.69, mean ordinal 2.15
+plain B: win rate 0.187 [0.122, 0.275], mean score 39.03, mean ordinal 2.27
+==== pudding 0.6 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.712 [0.616, 0.792], mean score 46.82, mean ordinal 1.34
+plain A: win rate 0.202 [0.135, 0.292], mean score 39.01, mean ordinal 2.28
+plain B: win rate 0.086 [0.045, 0.158], mean score 38.45, mean ordinal 2.34
+==== maki 0.25 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.692 [0.595, 0.774], mean score 47.46, mean ordinal 1.33
+plain A: win rate 0.116 [0.067, 0.194], mean score 38.46, mean ordinal 2.44
+plain B: win rate 0.192 [0.126, 0.280], mean score 39.72, mean ordinal 2.20
+==== maki 1.0 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.722 [0.627, 0.801], mean score 46.45, mean ordinal 1.37
+plain A: win rate 0.177 [0.114, 0.264], mean score 37.64, mean ordinal 2.29
+plain B: win rate 0.101 [0.056, 0.176], mean score 37.64, mean ordinal 2.33
+==== tempura+sashimi x0.5 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.715 [0.620, 0.795], mean score 45.41, mean ordinal 1.34
+plain A: win rate 0.200 [0.133, 0.290], mean score 38.34, mean ordinal 2.15
+plain B: win rate 0.084 [0.044, 0.156], mean score 36.08, mean ordinal 2.45
+==== tempura+sashimi x1.5 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.652 [0.554, 0.738], mean score 46.94, mean ordinal 1.40
+plain A: win rate 0.237 [0.164, 0.330], mean score 40.75, mean ordinal 2.20
+plain B: win rate 0.111 [0.063, 0.188], mean score 39.35, mean ordinal 2.33
+==== wasabi 0 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.783 [0.692, 0.853], mean score 47.89, mean ordinal 1.26
+plain A: win rate 0.167 [0.106, 0.252], mean score 38.25, mean ordinal 2.28
+plain B: win rate 0.051 [0.022, 0.113], mean score 36.79, mean ordinal 2.43
+==== wasabi 1.5 (99 games, seeds 1000+, chance = 0.333) ====
+variant: win rate 0.581 [0.482, 0.673], mean score 44.35, mean ordinal 1.60
+plain A: win rate 0.177 [0.114, 0.264], mean score 38.97, mean ordinal 2.26
+plain B: win rate 0.242 [0.169, 0.335], mean score 39.25, mean ordinal 2.10
