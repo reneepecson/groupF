@@ -1,0 +1,4 @@
+==== current weights (reference) (9 games, seeds 3000+, chance = 0.333) ====
+variant: win rate 0.778 [0.453, 0.937], mean score 49.67, mean ordinal 1.22
+plain A: win rate 0.000 [0.000, 0.299], mean score 38.33, mean ordinal 2.56
+plain B: win rate 0.222 [0.063, 0.547], mean score 38.44, mean ordinal 2.22

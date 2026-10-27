@@ -40,27 +40,16 @@ public class SweepRunner {
     }
 
     public static void main(String[] args) throws IOException {
-        int nGames = 99;            // multiple of 3; about 12 minutes per setting
+        System.out.println("wasabiFrac = " + new ReneePartialSetHeuristic().wasabiFrac);
+        int nGames = 9;            // multiple of 3; about 12 minutes per setting
         int budgetMs = 100;
-        int seedOffset = 1000;      // same tuning seeds as the ablation; keep 0-500 for the final runs
-
+        int seedOffset = 3000;      // fresh tuning seeds
         // each setting changes one weight (or one group of weights) of the current heuristic
         Map<String, Consumer<ReneePartialSetHeuristic>> settings = new LinkedHashMap<>();
         settings.put("current weights (reference)", h -> {});
-        settings.put("pudding 0.15", h -> h.puddingWeight = 0.15);
-        settings.put("pudding 0.6", h -> h.puddingWeight = 0.6);
-        settings.put("maki 0.25", h -> h.makiWeight = 0.25);
-        settings.put("maki 1.0", h -> h.makiWeight = 1.0);
-        settings.put("tempura+sashimi x0.5", h -> {
-            h.tempuraFrac *= 0.5; h.sashimiOneFrac *= 0.5; h.sashimiTwoFrac *= 0.5;
-        });
-        settings.put("tempura+sashimi x1.5", h -> {
-            h.tempuraFrac *= 1.5; h.sashimiOneFrac *= 1.5; h.sashimiTwoFrac *= 1.5;
-        });
-        settings.put("wasabi 0", h -> h.wasabiFrac = 0);
-        settings.put("wasabi 1.5", h -> h.wasabiFrac = 1.5);
+     //   settings.put("wasabi 0", h -> h.wasabiFrac = 0);
 
-        try (FileWriter file = new FileWriter("sweep_results.txt", true)) {
+        try (FileWriter file = new FileWriter("sweep_smoke.txt", true)) {
             for (Map.Entry<String, Consumer<ReneePartialSetHeuristic>> s : settings.entrySet()) {
                 double[] wins = new double[3], scoreSum = new double[3], ordinalSum = new double[3];
                 String[] names = {"variant", "plain A", "plain B"};

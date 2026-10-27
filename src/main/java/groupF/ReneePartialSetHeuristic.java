@@ -12,7 +12,7 @@ public class ReneePartialSetHeuristic implements IStateHeuristic {
     public double tempuraFrac = 0.4;     // share of a pair's value for one unpaired tempura
     public double sashimiOneFrac = 0.2;  // share of a triple's value for 1 of 3 sashimi
     public double sashimiTwoFrac = 0.5;  // share for 2 of 3
-    public double wasabiFrac = 0.75;     // share of the expected wasabi bonus
+    public double wasabiFrac = 0.0;     // share of the expected wasabi bonus
     public double makiWeight = 0.5;      // share of the projected round-end maki points
     public double puddingWeight = 0.3;   // share of the projected game-end pudding points
     public boolean relative = true;      // my value minus the opponents' average

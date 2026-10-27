@@ -34,3 +34,11 @@ plain B: win rate 0.051 [0.022, 0.113], mean score 36.79, mean ordinal 2.43
 variant: win rate 0.581 [0.482, 0.673], mean score 44.35, mean ordinal 1.60
 plain A: win rate 0.177 [0.114, 0.264], mean score 38.97, mean ordinal 2.26
 plain B: win rate 0.242 [0.169, 0.335], mean score 39.25, mean ordinal 2.10
+==== current weights (reference) (201 games, seeds 2000+, chance = 0.333) ====
+variant: win rate 0.724 [0.658, 0.781], mean score 46.56, mean ordinal 1.35
+plain A: win rate 0.174 [0.128, 0.233], mean score 38.79, mean ordinal 2.26
+plain B: win rate 0.102 [0.067, 0.152], mean score 38.07, mean ordinal 2.37
+==== wasabi 0 (201 games, seeds 2000+, chance = 0.333) ====
+variant: win rate 0.816 [0.757, 0.863], mean score 47.72, mean ordinal 1.20
+plain A: win rate 0.132 [0.092, 0.186], mean score 38.07, mean ordinal 2.28
+plain B: win rate 0.052 [0.029, 0.092], mean score 36.03, mean ordinal 2.50
