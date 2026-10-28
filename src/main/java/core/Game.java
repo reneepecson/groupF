@@ -17,6 +17,7 @@ import players.basicMCTS.BasicMCTSPlayer;
 import players.human.ActionController;
 import players.human.HumanGUIPlayer;
 import players.mcts.MCTSPlayer;
+import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
 import utilities.JSONUtils;
 import utilities.Pair;
@@ -50,7 +51,8 @@ public class Game {
     private JFrame frame;
     // Timers for various function calls
     private double nextTime, copyTime, agentTime, actionComputeTime;
-    private int nextCount, copyCount, actionComputeCount;
+    private long[] playerDecisionTimeNanos;
+    private int[] playerDecisionCounts;
     // Keeps track of action spaces for each game tick, pairs of (player ID, #actions)
     private ArrayList<Pair<Integer, Integer>> actionSpaceSize;
     // Number of times an agent is asked for decisions
@@ -61,8 +63,6 @@ public class Game {
     private boolean debug = false;
     private int turnPause;
     protected AbstractAction overrideAction;
-    // the player being asked for an action; with simultaneous moves this need not be the current player (-1 if none)
-    private volatile int playerToMove = -1;
     protected String savedStateDirectory = "SavedStates";
 
     /**
@@ -175,7 +175,8 @@ public class Game {
     public void updateGUI(AbstractGUIManager gui, JFrame frame) {
         // synchronise on game to avoid updating GUI in middle of action being taken
         AbstractGameState gameState = getGameState();
-        AbstractPlayer player = getPlayers().get(getPlayerToMove());
+        int currentPlayer = gameState.getCurrentPlayer();
+        AbstractPlayer player = getPlayers().get(currentPlayer);
         if (gui != null) {
             gui.update(player, gameState, isHumanToMove());
             frame.repaint();
@@ -248,10 +249,9 @@ public class Game {
         copyTime = 0;
         agentTime = 0;
         actionComputeTime = 0;
+        playerDecisionTimeNanos = new long[gameState.getNPlayers()];
+        playerDecisionCounts = new int[gameState.getNPlayers()];
         nDecisions = 0;
-        actionComputeCount = 0;
-        copyCount = 0;
-        nextCount = 0;
         actionSpaceSize = new ArrayList<>();
         nActionsPerTurnSum = 0;
         nActionsPerTurn = 1;
@@ -341,16 +341,8 @@ public class Game {
     }
 
     public final boolean isHumanToMove() {
-        return this.getPlayers().get(getPlayerToMove()) instanceof HumanGUIPlayer;
-    }
-
-    /**
-     * The player being asked for an action. When several players move simultaneously they are asked one by one, so
-     * this need not be the current player.
-     */
-    public final int getPlayerToMove() {
-        int p = playerToMove;
-        return p >= 0 ? p : gameState.getCurrentPlayer();
+        int activePlayer = gameState.getCurrentPlayer();
+        return this.getPlayers().get(activePlayer) instanceof HumanGUIPlayer;
     }
 
     public final AbstractAction oneAction() {
@@ -377,19 +369,16 @@ public class Game {
                 throw new AssertionError("Player " + activePlayer + " is not allowed to move");
 
             AbstractPlayer currentPlayer = players.get(activePlayer);
-            playerToMove = activePlayer;
 
             // copy state for this player
             double s = System.nanoTime();
             AbstractGameState observation = gameState.copy(activePlayer);
             copyTime += (System.nanoTime() - s);
-            copyCount++;
 
             // compute available actions
             s = System.nanoTime();
             List<AbstractAction> observedActions = forwardModel.computeAvailableActions(observation, currentPlayer.getParameters().actionSpace, activePlayer);
             actionComputeTime += (System.nanoTime() - s);
-            actionComputeCount++;
 
             if (observedActions.isEmpty()) {
                 Stack<IExtendedSequence> actionsInProgress = gameState.getActionsInProgress();
@@ -434,13 +423,16 @@ public class Game {
                 currentPlayer.registerUpdatedObservation(observation);
             } else {
                 // Get action from player, and time it
-                s = System.nanoTime();
+                long decisionStart = System.nanoTime();
                 if (debug)
                     System.out.printf("About to get action for player %d%n", activePlayer);
                 action = currentPlayer.getAction(observation, observedActions);
                 if (debug)
                     System.out.printf("Game: %2d Tick: %3d\t%s%n", gameState.getGameID(), getTick(), action.getString(gameState));
-                agentTime += (System.nanoTime() - s);
+                long decisionTime = System.nanoTime() - decisionStart;
+                agentTime += decisionTime;
+                playerDecisionTimeNanos[activePlayer] += decisionTime;
+                playerDecisionCounts[activePlayer]++;
                 nDecisions++;
             }
 
@@ -466,7 +458,6 @@ public class Game {
 
             actionsChosen.put(activePlayer, action);
         }
-        playerToMove = -1;
         // fire ACTION_CHOSEN per player, only after all simultaneous players have chosen an action
         for (int p : activePlayers) {
             AbstractAction action = actionsChosen.get(p);
@@ -488,8 +479,7 @@ public class Game {
         // apply once
         double s = System.nanoTime();
         forwardModel.next(gameState, finalAction.copy());
-        nextTime += (System.nanoTime() - s);
-        nextCount++;
+        nextTime = (System.nanoTime() - s);
 
         // fire ACTION_TAKEN once per player after applying
         for (int p : activePlayers) {
@@ -553,7 +543,7 @@ public class Game {
      * @return - agent time
      */
     public double getAgentTime() {
-        return agentTime / nDecisions;
+        return agentTime;
     }
 
     /**
@@ -562,7 +552,8 @@ public class Game {
      * @return - copy time
      */
     public double getCopyTime() {
-        return copyTime / copyCount;
+        //  System.out.printf("Average copy time was %.3f microseconsds%n", copyTime / 1e3);
+        return copyTime;
     }
 
     /**
@@ -571,7 +562,7 @@ public class Game {
      * @return - next time
      */
     public double getNextTime() {
-        return nextTime / nextCount;
+        return nextTime;
     }
 
     /**
@@ -581,7 +572,7 @@ public class Game {
      * @return - action compute time
      */
     public double getActionComputeTime() {
-        return actionComputeTime / actionComputeCount;
+        return actionComputeTime;
     }
 
     /**
@@ -609,6 +600,26 @@ public class Game {
      */
     public int getNDecisions() {
         return nDecisions;
+    }
+
+    /**
+     * Returns the time spent in the player's action-selection method during this game.
+     *
+     * @param playerId player seat
+     * @return nanoseconds spent selecting actions
+     */
+    public long getPlayerDecisionTimeNanos(int playerId) {
+        return playerDecisionTimeNanos[playerId];
+    }
+
+    /**
+     * Returns how many times the player's action-selection method was called during this game.
+     *
+     * @param playerId player seat
+     * @return number of decisions requested from the player
+     */
+    public int getPlayerDecisionCount(int playerId) {
+        return playerDecisionCounts[playerId];
     }
 
     /**
@@ -705,6 +716,9 @@ public class Game {
         return gameType.toString();
     }
 
+
+
+
     /**
      * The recommended way to run a game using the GUI is via evaluations.Frontend or evaluations.FrontEndSimple,
      * and for experiments of many games use evaluations.RunGames, which provides more useful tools for gathering results.
@@ -719,7 +733,8 @@ public class Game {
      * and then run this class.
      */
     public static void main(String[] args) {
-        String gameType = Utils.getArg(args, "game", "SushiGo");
+        //String[] g = {"DotsAndBoxes","Connect4","DotsAndBoxes"};
+        String gameType = Utils.getArg(args, "game", "ExplodingKittens");
         boolean useGUI = Utils.getArg(args, "gui", true);
         int turnPause = Utils.getArg(args, "turnPause", 0);
         long seed = Utils.getArg(args, "seed", System.currentTimeMillis());
@@ -728,7 +743,7 @@ public class Game {
         /* Set up players for the game */
         ArrayList<AbstractPlayer> players = new ArrayList<>();
 
-        players.add(new MCTSPlayer());
+        //players.add(new MCTSPlayer());
 //        players.add(new HumanConsolePlayer());
 //        players.add(new HumanConsolePlayer());
 //        players.add(new RandomPlayer());
@@ -736,10 +751,11 @@ public class Game {
         players.add(new RandomPlayer());
         players.add(new RandomPlayer());
 //        players.add(new HumanGUIPlayer(ac));
-        players.add(new BasicMCTSPlayer());
-        players.add(new BasicMCTSPlayer());
 //        players.add(new BasicMCTSPlayer());
 //        players.add(new BasicMCTSPlayer());
+//        players.add(new BasicMCTSPlayer());
+//        players.add(new BasicMCTSPlayer());
+//        players.add(new OSLAPlayer());
 
 
         /* Game parameter configuration. Set to null to ignore and use default parameters */
@@ -747,6 +763,6 @@ public class Game {
 
         /* Run! */
         runOne(GameType.valueOf(gameType), gameParams, players, seed, false, null, useGUI ? ac : null, turnPause);
-
+       // runOne ( GameType.TicTacToe ,players , seed , ac , randomizeParameters , listeners , turnPause ) ;
     }
 }

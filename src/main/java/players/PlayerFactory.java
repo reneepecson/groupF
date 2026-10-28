@@ -5,6 +5,8 @@ import evaluation.optimisation.TunableParameters;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import players.basicMCTS.BasicMCTSPlayer;
+import players.muditbot.MuditBot;
+import players.muditbot.MuditBotCardPicking;
 import players.rhea.RHEAParams;
 import players.rhea.RHEAPlayer;
 import players.rmhc.RMHCParams;
@@ -70,6 +72,8 @@ public class PlayerFactory {
             case "random" -> new RandomPlayer();
             case "osla" -> new OSLAPlayer();
             case "mcts" -> new BasicMCTSPlayer();
+            case "muditbot" -> new MuditBot();
+            case "muditbot_cardpicking" -> new MuditBotCardPicking();
             case "rmhc" -> new RMHCPlayer(new RMHCParams());
             case "rhea" -> new RHEAPlayer(new RHEAParams());
             default -> throw new AssertionError("Unknown file or player key : " + input);

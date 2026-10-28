@@ -3,6 +3,7 @@ package evaluation.tournaments;
 import core.AbstractGameState;
 import core.AbstractParameters;
 import core.AbstractPlayer;
+import core.Game;
 import evaluation.RunArg;
 import evaluation.listeners.IGameListener;
 import evaluation.listeners.TournamentMetricsGameListener;
@@ -12,6 +13,9 @@ import utilities.*;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -47,6 +51,26 @@ public class RoundRobinTournament extends AbstractTournament {
     String seedFile;
     Random seedRnd;
     Map<RunArg, Object> config;
+    private final Map<String, DecisionTime> decisionTimes = new LinkedHashMap<>();
+    private int completedGames;
+    private int totalGames;
+    private Instant tournamentStartTime;
+    private static final DateTimeFormatter RUN_TIMESTAMP_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
+
+    private static class DecisionTime {
+        long totalNanos;
+        long decisionCount;
+
+        void add(long elapsedNanos, int decisions) {
+            totalNanos += elapsedNanos;
+            decisionCount += decisions;
+        }
+
+        double averageMillis() {
+            return decisionCount == 0 ? Double.NaN : totalNanos / (double) decisionCount / 1_000_000.0;
+        }
+    }
 
     /**
      * Create a round robin tournament, which plays all agents against all others.
@@ -133,9 +157,10 @@ public class RoundRobinTournament extends AbstractTournament {
         this.randomSeed = ((Number) config.getOrDefault(RunArg.seed, System.currentTimeMillis())).longValue();
         this.seedRnd = new Random(randomSeed);
         this.randomGameParams = (boolean) config.getOrDefault(RunArg.randomGameParams, false);
+        this.totalGames = actualGames * Math.max(1, tournamentSeeds);
 
         this.name = String.format("Game: %s, Players: %d, Mode: %s, TotalGames: %d, GamesPerMatchup: %d",
-                gameToPlay.name(), playersPerGame, tournamentMode, actualGames, gamesPerMatchup);
+                gameToPlay.name(), playersPerGame, tournamentMode, totalGames, gamesPerMatchup);
         System.out.println(name);
         String destDir = (String) config.getOrDefault(RunArg.destDir, "");
         if (!destDir.isEmpty())
@@ -147,6 +172,7 @@ public class RoundRobinTournament extends AbstractTournament {
      */
     @Override
     public void run() {
+        tournamentStartTime = Instant.now();
         if (verbose)
             System.out.println("Playing " + game.getGameType().name());
 
@@ -355,6 +381,9 @@ public class RoundRobinTournament extends AbstractTournament {
             GameResult[] results = game.getGameState().getPlayerResults();
 
             tournamentResults.record(game);
+            recordDecisionTimes(game);
+            completedGames++;
+            System.out.printf("Game completed %d/%d%n", completedGames, totalGames);
 
             if (verbose) {
                 StringBuffer sb = new StringBuffer();
@@ -374,6 +403,15 @@ public class RoundRobinTournament extends AbstractTournament {
         }
     }
 
+    private void recordDecisionTimes(Game completedGame) {
+        for (int player = 0; player < completedGame.getPlayers().size(); player++) {
+            String agentName = completedGame.getPlayers().get(player).toString();
+            decisionTimes.computeIfAbsent(agentName, ignored -> new DecisionTime()).add(
+                    completedGame.getPlayerDecisionTimeNanos(player),
+                    completedGame.getPlayerDecisionCount(player));
+        }
+    }
+
     protected void calculateFinalResults() {
         finalWinRanking = winRateAnalysis.getRanking(tournamentResults);
         finalOrdinalRanking = ordinalAnalysis.getRanking(tournamentResults);
@@ -389,6 +427,9 @@ public class RoundRobinTournament extends AbstractTournament {
         calculateFinalResults();
         boolean toFile = resultsFile != null && !resultsFile.isEmpty();
         List<String> dataDump = new ArrayList<>();
+        String runTimestamp = RUN_TIMESTAMP_FORMAT.format(
+                tournamentStartTime.atZone(ZoneId.systemDefault()));
+        dataDump.add("Tournament run timestamp: " + runTimestamp + "\n");
         dataDump.add(name + "\n");
 
         // To console
@@ -446,6 +487,22 @@ public class RoundRobinTournament extends AbstractTournament {
             if (toFile) dataDump.add(str);
             if (verbose) System.out.print(str);
         }
+        StringBuilder decisionTimeSummary = new StringBuilder("Average decision time (ms/decision): ");
+        boolean firstTiming = true;
+        for (Map.Entry<String, DecisionTime> entry : decisionTimes.entrySet()) {
+            String agentName = entry.getKey();
+            DecisionTime timing = entry.getValue();
+            if (!firstTiming) {
+                decisionTimeSummary.append("; ");
+            }
+            decisionTimeSummary.append(String.format("%s %.3f ms (%,d decisions)",
+                    agentName, timing.averageMillis(), timing.decisionCount));
+            firstTiming = false;
+        }
+        decisionTimeSummary.append('\n');
+        if (toFile) dataDump.add(decisionTimeSummary.toString());
+        if (verbose) System.out.print(decisionTimeSummary);
+
         str = "\n\n---- Alpha Rank ----  \n";
         if (toFile) dataDump.add(str);
         if (verbose) System.out.print(str);
