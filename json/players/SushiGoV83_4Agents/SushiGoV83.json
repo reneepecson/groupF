@@ -1,0 +1,10 @@
+{
+  "class": "groupF.SushiGoV83Params",
+  "budgetType": "BUDGET_TIME",
+  "budget": 100,
+  "rolloutLength": 10,
+  "maxTreeDepth": 5,
+  "K": 1.41421356237,
+  "epsilon": 0.000001
+}
+
