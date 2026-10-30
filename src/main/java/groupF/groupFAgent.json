@@ -1,0 +1,11 @@
+{
+  "class" : "players.basicMCTS.BasicMCTSParams",
+  "K" : 1.4142135623730951,
+  "rolloutLength" : 10,
+  "maxTreeDepth" : 5,
+  "heuristic" : {
+    "class" : "groupF.ReneePartialSetHeuristic"
+  },
+  "budgetType" : "BUDGET_TIME",
+  "budget" : 900
+}

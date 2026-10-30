@@ -35,7 +35,6 @@ public class ReneePartialSetHeuristic implements IStateHeuristic {
             value = mine - others / (n - 1);
         }
         value /= scale;
-        if (calls <= 5) System.out.println("heuristic value: " + value); // delete after checking
         return value;
     }
 
