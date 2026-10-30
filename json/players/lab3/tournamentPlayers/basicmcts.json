@@ -1,0 +1,7 @@
+{
+  "class": "players.basicMCTS.BasicMCTSParams",
+  "budgetType": "BUDGET_TIME",
+  "budget": 40,
+  "rolloutLength": 10,
+  "maxTreeDepth": 30
+}

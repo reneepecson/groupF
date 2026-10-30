@@ -23,9 +23,9 @@ public enum RunArg {
             "MultiNTBEA is deprecated and should not be used.",
             "NTBEA",
             new Usage[]{Usage.ParameterSearch, Usage.ExpertIteration}),
-    addTimeStamp("(Optional) If true (default is false), then the results will be written to a subdirectory of destDir.\n" +
+    addTimeStamp("(Optional) If true (default is true), then all results will be written to a timestamped subdirectory of destDir.\n" +
             "\t This may be useful if you want to use the same destDir for multiple experiments.",
-            false,
+            true,
             new Usage[]{Usage.RunGames}),
     budget("The budget to be used by all agent (if they support the IAnyTime interface). \n" +
             "\t If non-zero then this will override the value in any JSON definitions.\n",
